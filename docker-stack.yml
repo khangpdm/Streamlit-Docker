@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  streamlit-app:
+    image: my-streamlit-app:latest
+    deploy: 
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        constraints: [node.role == worker]
+    networks:
+      - swarm-net
+
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+    networks:
+      - swarm-net
+
+networks:
+  swarm-net:
+    driver: overlay
