@@ -20,7 +20,7 @@ st.set_page_config(
     layout="wide",
 )
 
-st.title("📝 Hệ thống chấm bài trắc nghiệm OMR(Test CI/CD) 2")
+st.title("📝 Hệ thống chấm bài trắc nghiệm OMR(Test CI/CD) 3")
 st.write(
     "Tải ảnh phiếu trả lời và file JSON đáp án chuẩn "
     "để nhận diện, đối chiếu và tính điểm tự động."
