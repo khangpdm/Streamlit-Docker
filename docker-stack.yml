@@ -10,7 +10,7 @@ volumes:
 
 services:
   streamlit-app:
-    image: my-streamlit-app:latest
+    image: khangpdm/my-streamlit-app:latest
     deploy: 
       replicas: 1
       restart_policy:
