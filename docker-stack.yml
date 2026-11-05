@@ -1,13 +1,5 @@
 version: '3.8'
 
-networks:
-  swarm-net:
-    driver: overlay
-
-volumes:
-  prometheus_data:
-  grafana_data:
-
 services:
   streamlit-app:
     image: khangpdm/my-streamlit-app:latest
@@ -33,50 +25,7 @@ services:
         constraints: [node.role == manager]
     networks:
       - swarm-net
-      
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-    networks:
-      - swarm-net
-    deploy:
-      placement:
-        constraints: [node.role == manager]
 
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    networks:
-      - swarm-net
-    deploy:
-      placement:
-        constraints: [node.role == manager]
-
-  node-exporter:
-    image: prom/node-exporter:latest
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--path.rootfs=/rootfs'
-      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    pid: host
-    networks:
-      - swarm-net
-    deploy:
-      mode: global
-      restart_policy:
-        condition: on-failure
+networks:
+  swarm-net:
+    driver: overlay
