@@ -1,75 +1,31 @@
-
 name: CI/CD Pipeline for Docker Swarm
 
 on:
   push:
-    branches: ["master"]
-
-# Tránh nhiều lần deploy đồng thời
-concurrency:
-  group: swarm-deployment
-  cancel-in-progress: false
+    branches: [ "master" ]
 
 jobs:
   build-and-deploy:
     runs-on: self-hosted
-
     steps:
-      # 1. Checkout source code
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      # 2. Login Docker Hub
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 3. Setup Docker Buildx
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # 4. Build và push image
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          platforms: linux/amd64
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/my-streamlit-app:latest
-            ${{ secrets.DOCKER_USERNAME }}/my-streamlit-app:${{ github.sha }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/my-streamlit-app:${{ github.sha }}
 
-      # 5. Kiểm tra Docker Swarm Manager
-      - name: Verify Docker Swarm Manager
+      - name: Update Docker Swarm Service
         run: |
-          if [ "$(docker info --format '{{.Swarm.ControlAvailable}}')" != "true" ]; then
-            echo "ERROR: Runner is not connected to a Swarm Manager"
-            exit 1
-          fi
-
-          docker service inspect my-app_streamlit-app
-
-      # 6. Deploy image mới lên Docker Swarm
-      - name: Deploy to Docker Swarm
-        run: |
-          IMAGE="${{ secrets.DOCKER_USERNAME }}/my-streamlit-app:${{ github.sha }}"
-
-          echo "Deploying image: $IMAGE"
-
           docker service update \
-            --with-registry-auth \
-            --image "$IMAGE" \
-            --update-parallelism 1 \
-            --update-delay 10s \
-            --update-failure-action rollback \
+            --image ${{ secrets.DOCKER_USERNAME }}/my-streamlit-app:${{ github.sha }} \
             my-app_streamlit-app
-
-      # 7. Kiểm tra kết quả triển khai
-      - name: Verify deployment
-        run: |
-          docker service ps my-app_streamlit-app
-
-          docker service inspect my-app_streamlit-app \
-            --format 'Running image: {{.Spec.TaskTemplate.ContainerSpec.Image}}'
